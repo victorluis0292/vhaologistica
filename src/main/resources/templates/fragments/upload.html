@@ -1,0 +1,12 @@
+<div th:fragment="uploadFragment">
+
+    <h2 class="mb-3">📄 Subir archivo Excel</h2>
+
+    <form th:action="@{/dashboard/excel/upload}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" class="form-control mb-3" required />
+        <button type="submit" class="btn btn-primary w-100">Subir archivo</button>
+    </form>
+
+    <p th:if="${mensaje}" class="text-danger mt-2" th:text="${mensaje}"></p>
+
+</div>
