@@ -1,9 +1,0 @@
-mx\vhao\vhaologistica\service\ExcelService.class
-mx\vhao\vhaologistica\controller\DashboardController.class
-mx\vhao\vhaologistica\controller\ExcelController.class
-mx\vhao\vhaologistica\controller\LoginViewController.class
-mx\vhao\vhaologistica\repository\UsuarioRepository.class
-mx\vhao\vhaologistica\service\UsuarioService.class
-mx\vhao\vhaologistica\model\Usuario.class
-mx\vhao\vhaologistica\VhaologisticaApplication.class
-mx\vhao\vhaologistica\controller\LoginController.class
