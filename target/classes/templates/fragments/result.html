@@ -1,29 +1,15 @@
-<div th:fragment="resultFragment" class="p-3">
-    <h2 class="mb-3 text-center">📊 Datos Procesados</h2>
-
-    <div th:if="${resultado != null}">
-        <p><strong>Registros procesados:</strong> <span th:text="${resultado.size()}"></span></p>
-    </div>
-
-    <div th:if="${resultado != null and !#lists.isEmpty(resultado)}">
-        <table class="table table-bordered table-striped bg-white">
-            <thead class="table-primary">
-                <tr>
-                    <th th:each="col : ${columnasSistema} ?: ${#lists.newArrayList()}" th:text="${col}"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="fila : ${resultado}">
-                    <td th:each="col : ${columnasSistema} ?: ${#lists.newArrayList()}"
-                        th:text="${fila.get(col) != null ? fila.get(col) : ''}"></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <p th:if="${resultado == null or #lists.isEmpty(resultado)}" class="text-center text-muted">
-        No se encontraron datos.
-    </p>
-
-    <a th:href="@{/dashboard/excel}" class="btn btn-secondary mt-3 w-100">Subir otro archivo</a>
+<div th:fragment="resultFragment">
+    <h3>Resultados del Excel</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th th:each="col : ${resultado[0].keySet()}" th:text="${col}"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="fila : ${resultado}">
+                <td th:each="valor : ${fila.values()}" th:text="${valor}"></td>
+            </tr>
+        </tbody>
+    </table>
 </div>

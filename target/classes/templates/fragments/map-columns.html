@@ -1,37 +1,30 @@
-<!-- fragments/map-columns.html -->
-<div th:fragment="mapColumnsFragment" class="p-3">
-    <h2 class="mb-3 text-center">📌 Mapear columnas del Excel</h2>
-    <p class="text-muted">Selecciona qué columna del Excel corresponde a cada campo del sistema.</p>
-
-    <form method="POST" th:action="@{/dashboard/excel/process}">
+<div th:fragment="mapColumnsFragment">
+    <h3>Mapear Columnas</h3>
+    <form th:action="@{/dashboard/excel/process}" method="post">
         <input type="hidden" name="rutaArchivo" th:value="${rutaArchivo}" />
-
-        <table class="table table-bordered bg-white">
-            <thead class="table-primary">
+        <table class="table table-bordered">
+            <thead>
                 <tr>
-                    <th>Columna del sistema</th>
-                    <th>Columna del Excel</th>
+                    <th>Columna Sistema</th>
+                    <th>Columna Excel</th>
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="colSistema : ${columnasSistema} ?: []">
-                    <td th:text="${colSistema} ?: 'N/A'"></td>
+                <tr th:each="sCol : ${columnasSistema}">
+                    <!-- Columna Sistema: label fijo -->
+                    <td th:text="${sCol}"></td>
+
+                    <!-- Columna Excel: combobox con opción vacía inicial -->
                     <td>
-                        <select class="form-select" th:name="${colSistema}">
-                            <option value="">-- Seleccionar --</option>
-                            <option th:each="colExcel : ${columnas} ?: []"
-                                    th:value="${colExcel}"
-                                    th:text="${colExcel}"
-                                    th:selected="${colExcel != null and colSistema != null and #strings.equalsIgnoreCase(colExcel.trim(), colSistema.trim())}">
-                            </option>
+                        <select name="mapping[__${sCol}__]" class="form-select">
+                            <option value="">-- Selecciona columna --</option>
+                            <option th:each="col : ${columnas}" th:value="${col}" th:text="${col}"></option>
                         </select>
                     </td>
                 </tr>
             </tbody>
         </table>
-
-        <button type="submit" class="btn btn-success mt-3 w-100">Procesar Excel</button>
+        <button type="submit" class="btn btn-success">Procesar Datos</button>
     </form>
-
-    <div th:if="${mensaje != null}" class="alert alert-warning mt-3" th:text="${mensaje}"></div>
+    <p th:text="${mensaje}" class="text-danger"></p>
 </div>
