@@ -18,7 +18,6 @@ public class ExcelController {
 
     private final ExcelService excelService;
 
-    // Columnas predefinidas del sistema
     private final List<String> columnasSistema = List.of(
         "Ticket","Afiliación","Fecha inicio","Estatus","IDC DE CAMPO","Servicio",
         "Tipo de TPV","Comercio","Domicilio","Colonia","Ciudad","ASIGNACION",
@@ -31,18 +30,16 @@ public class ExcelController {
         this.excelService = excelService;
     }
 
-    // GET: formulario inicial de subir archivo
     @GetMapping
     public String mostrarUpload(HttpSession session, Model model) {
         Usuario usuario = (Usuario) session.getAttribute("usuario");
         if (usuario == null) return "redirect:/?error=true";
 
         model.addAttribute("usuario", usuario);
-        model.addAttribute("contenido", "upload"); // carga fragmento upload
+        model.addAttribute("contenido", "upload");
         return "dashboard";
     }
 
-    // POST: subir archivo Excel
     @PostMapping("/upload")
     public String subirArchivo(@RequestParam("file") MultipartFile file,
                                HttpSession session,
@@ -61,7 +58,10 @@ public class ExcelController {
 
         try {
             String rutaArchivo = excelService.guardarArchivo(file);
+            System.out.println("[ExcelService] Archivo guardado en: " + rutaArchivo);
+
             List<String> columnas = excelService.obtenerColumnas(new FileInputStream(rutaArchivo));
+            System.out.println("[ExcelService] Columnas obtenidas: " + columnas);
 
             model.addAttribute("columnas", columnas);
             model.addAttribute("columnasSistema", columnasSistema);
@@ -77,7 +77,6 @@ public class ExcelController {
         return "dashboard";
     }
 
-    ///// POST: procesar mapeo final
     @PostMapping("/process")
     public String procesarMappingFinal(@RequestParam Map<String, String> mapping,
                                        @RequestParam("rutaArchivo") String rutaArchivo,
@@ -90,16 +89,23 @@ public class ExcelController {
         model.addAttribute("usuario", usuario);
 
         try {
+            System.out.println("[ExcelService] Mapping recibido:");
+            mapping.forEach((k,v) -> System.out.println("Excel: '" + k + "' → Sistema: '" + v + "'"));
+
             List<Map<String, String>> datosProcesados =
                     excelService.procesarDatos(new FileInputStream(rutaArchivo), mapping);
 
+            System.out.println("[ExcelService] Filas procesadas: " + datosProcesados.size());
+            if(!datosProcesados.isEmpty()) System.out.println("Primera fila: " + datosProcesados.get(0));
+
             model.addAttribute("resultado", datosProcesados);
+            model.addAttribute("columnasSistema", columnasSistema);
             model.addAttribute("contenido", "result");
 
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("mensaje", "Error procesando datos del archivo.");
-            model.addAttribute("contenido", "upload");
+            model.addAttribute("contenido", "map-columns");
         }
 
         return "dashboard";

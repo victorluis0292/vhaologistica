@@ -1,5 +1,7 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
 <div th:fragment="mapColumnsFragment" class="p-3">
-
     <h2 class="mb-3 text-center">📌 Mapear columnas del Excel</h2>
     <p class="text-muted">Selecciona qué columna del Excel corresponde a cada campo del sistema.</p>
 
@@ -13,25 +15,28 @@
                     <th>Columna del Excel</th>
                 </tr>
             </thead>
-
             <tbody>
-                <tr th:each="columnaSistema : ${columnasSistema}">
-                    <td th:text="${columnaSistema}"></td>
-                    <td>
-                        <select class="form-select" th:name="${columnaSistema}">
-                            <option value="">-- Seleccionar --</option>
-                            <option th:each="columnaExcel : ${columnas}"
-                                    th:value="${columnaExcel}"
-                                    th:text="${columnaExcel}"></option>
-                        </select>
-                    </td>
-                </tr>
+               <tr th:each="colSistema : ${columnasSistema} ?: []">
+    <td th:text="${colSistema} ?: 'N/A'"></td>
+    <td>
+        <select class="form-select" th:name="${colSistema}">
+            <option value="">-- Seleccionar --</option>
+            <option th:each="colExcel : ${columnas} ?: []"
+                    th:value="${colExcel}"
+                    th:text="${colExcel}"
+                    th:selected="${colExcel != null and colSistema != null and #strings.equalsIgnoreCase(colExcel.trim(), colSistema.trim())}">
+            </option>
+        </select>
+    </td>
+</tr>
+
             </tbody>
         </table>
 
-        <button type="submit" class="btn btn-success mt-3 w-100">
-            Procesar Excel
-        </button>
+        <button type="submit" class="btn btn-success mt-3 w-100">Procesar Excel</button>
     </form>
 
+    <div th:if="${mensaje != null}" class="alert alert-warning mt-3" th:text="${mensaje}"></div>
 </div>
+</body>
+</html>

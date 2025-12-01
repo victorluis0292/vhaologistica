@@ -1,45 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
 <div th:fragment="resultFragment" class="p-3">
-
     <h2 class="mb-3 text-center">📊 Datos Procesados</h2>
 
-    <!-- TOTAL DE REGISTROS -->
+    <!-- Mostrar número de registros procesados -->
     <div th:if="${resultado != null}">
-        <p><strong>Registros procesados:</strong>
-            <span th:text="${resultado.size()}"></span>
-        </p>
+        <p><strong>Registros procesados:</strong> <span th:text="${resultado.size()}"></span></p>
     </div>
 
-    <!-- TABLA RESULTADOS -->
+    <!-- Tabla de resultados -->
     <div th:if="${resultado != null and !#lists.isEmpty(resultado)}">
-
         <table class="table table-bordered table-striped bg-white">
-
             <thead class="table-primary">
                 <tr>
-                    <th th:each="col : ${columnasSistema}" th:text="${col}"></th>
+                    <th th:each="col : ${columnasSistema} ?: ${#lists.newArrayList()}" th:text="${col}"></th>
                 </tr>
             </thead>
-
             <tbody>
                 <tr th:each="fila : ${resultado}">
-                    <td th:each="col : ${columnasSistema}"
+                    <td th:each="col : ${columnasSistema} ?: ${#lists.newArrayList()}"
                         th:text="${fila.get(col) != null ? fila.get(col) : ''}"></td>
                 </tr>
             </tbody>
-
         </table>
-
     </div>
 
-    <!-- SIN DATOS -->
-    <p th:if="${resultado == null or #lists.isEmpty(resultado)}"
-       class="text-center text-muted">
+    <!-- Mensaje si no hay datos -->
+    <p th:if="${resultado == null or #lists.isEmpty(resultado)}" class="text-center text-muted">
         No se encontraron datos.
     </p>
 
-    <!-- BOTÓN REGRESAR -->
-    <a th:href="@{/dashboard/excel}" class="btn btn-secondary mt-3 w-100">
-        Subir otro archivo
-    </a>
-
+    <!-- Botón para subir otro archivo -->
+    <a th:href="@{/dashboard/excel}" class="btn btn-secondary mt-3 w-100">Subir otro archivo</a>
 </div>
+</body>
+</html>
