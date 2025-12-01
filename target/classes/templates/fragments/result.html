@@ -1,15 +1,10 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<body>
 <div th:fragment="resultFragment" class="p-3">
     <h2 class="mb-3 text-center">📊 Datos Procesados</h2>
 
-    <!-- Mostrar número de registros procesados -->
     <div th:if="${resultado != null}">
         <p><strong>Registros procesados:</strong> <span th:text="${resultado.size()}"></span></p>
     </div>
 
-    <!-- Tabla de resultados -->
     <div th:if="${resultado != null and !#lists.isEmpty(resultado)}">
         <table class="table table-bordered table-striped bg-white">
             <thead class="table-primary">
@@ -26,13 +21,9 @@
         </table>
     </div>
 
-    <!-- Mensaje si no hay datos -->
     <p th:if="${resultado == null or #lists.isEmpty(resultado)}" class="text-center text-muted">
         No se encontraron datos.
     </p>
 
-    <!-- Botón para subir otro archivo -->
     <a th:href="@{/dashboard/excel}" class="btn btn-secondary mt-3 w-100">Subir otro archivo</a>
 </div>
-</body>
-</html>

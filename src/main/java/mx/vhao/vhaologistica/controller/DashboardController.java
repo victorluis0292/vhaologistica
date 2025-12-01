@@ -17,42 +17,16 @@ public class DashboardController {
             HttpSession session,
             Model model) {
 
+        // Verificar usuario en sesión
         Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (usuario == null) return "redirect:/?error=true";
+        if (usuario == null) {
+            return "redirect:/?error=true";
+        }
 
+        // Pasar usuario y fragmento a mostrar
         model.addAttribute("usuario", usuario);
-        model.addAttribute("contenido", contenido); // fragment a mostrar
-        return "dashboard";
-    }
+        model.addAttribute("contenido", contenido);
 
-    // Rutas directas para cada fragmento (opciones del sidebar)
-    @GetMapping("/dashboard/opcion1")
-    public String opcion1(HttpSession session, Model model) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (usuario == null) return "redirect:/?error=true";
-
-        model.addAttribute("usuario", usuario);
-        model.addAttribute("contenido", "opcion1"); // fragmento opcion1
-        return "dashboard";
-    }
-
-    @GetMapping("/dashboard/opcion2")
-    public String opcion2(HttpSession session, Model model) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (usuario == null) return "redirect:/?error=true";
-
-        model.addAttribute("usuario", usuario);
-        model.addAttribute("contenido", "opcion2"); // fragmento opcion2
-        return "dashboard";
-    }
-
-    @GetMapping("/dashboard/opcion3")
-    public String opcion3(HttpSession session, Model model) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (usuario == null) return "redirect:/?error=true";
-
-        model.addAttribute("usuario", usuario);
-        model.addAttribute("contenido", "opcion3"); // fragmento opcion3
-        return "dashboard";
+        return "dashboard"; // Thymeleaf usará 'contenido' para cargar el fragmento correspondiente
     }
 }

@@ -63,16 +63,16 @@
 <div class="main-content">
     <div th:switch="${contenido}">
         <!-- Inicio -->
-        <div th:case="'inicio'" th:replace="~{fragments/inicio :: inicioFragment}"></div>
+        <div th:case="'inicio'" th:include="fragments/inicio :: inicioFragment"></div>
 
         <!-- Subir Excel -->
-        <div th:case="'upload'" th:replace="~{fragments/upload :: uploadFragment}"></div>
+        <div th:case="'upload'" th:include="fragments/upload :: uploadFragment"></div>
 
         <!-- Mapear Columnas -->
-        <div th:case="'mapColumns'" th:replace="~{fragments/map-columns :: mapColumnsFragment}"></div>
+        <div th:case="'mapColumns'" th:include="fragments/map-columns :: mapColumnsFragment"></div>
 
         <!-- Resultados -->
-        <div th:case="'result'" th:replace="~{fragments/result :: resultFragment}"></div>
+        <div th:case="'result'" th:include="fragments/result :: resultFragment"></div>
 
         <!-- Caso por defecto -->
         <div th:case="*">
