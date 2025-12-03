@@ -1,15 +1,24 @@
 <div th:fragment="resultFragment">
-    <h3>Resultados del Excel</h3>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th th:each="col : ${resultado[0].keySet()}" th:text="${col}"></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="fila : ${resultado}">
-                <td th:each="valor : ${fila.values()}" th:text="${valor}"></td>
-            </tr>
-        </tbody>
-    </table>
+    <h3 class="mb-3">Resultados del Excel</h3>
+    
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th th:each="col : ${columnasSistema}" th:text="${col}">Columna</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="fila : ${resultado}">
+                    <td th:each="col : ${columnasSistema}" 
+                        th:text="${fila.get(col)}">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3">
+        <a th:href="@{/dashboard(contenido='upload')}" class="btn btn-secondary">Subir otro archivo</a>
+    </div>
 </div>
