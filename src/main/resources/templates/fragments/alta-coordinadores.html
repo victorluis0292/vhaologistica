@@ -1,0 +1,211 @@
+<div th:fragment="contenido">
+
+    <h3 class="mb-3">Administración de Coordinadores</h3>
+
+    <!-- 🔍 BUSCADOR -->
+    <div class="card p-3 mb-4 shadow-sm">
+        <h5 class="mb-3">Buscar Coordinadores</h5>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Nombre</label>
+                <input type="text" id="buscaNombre" class="form-control" placeholder="Buscar por nombre...">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Correo</label>
+                <input type="text" id="buscaCorreo" class="form-control" placeholder="Buscar por correo...">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Rol</label>
+                <select id="buscaRol" class="form-control">
+                    <option value="">-- Todos --</option>
+                    <option value="coordinador">Coordinador</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <button class="btn btn-primary w-100" onclick="filtrar()">Buscar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- FORMULARIO -->
+    <form id="formUsuario" class="card p-3">
+
+        <input type="hidden" id="id"/>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Nombre:</label>
+                <input id="nombre" class="form-control" required />
+            </div>
+            <div class="col">
+                <label>Correo:</label>
+                <input id="correo" class="form-control" required />
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Password:</label>
+                <input id="pass" type="password" class="form-control" required />
+            </div>
+            <div class="col">
+                <label>Rol:</label>
+                <select id="rol" class="form-control">
+                    <option value="coordinador">Coordinador</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Estado:</label>
+                <input id="estado" class="form-control" />
+            </div>
+            <div class="col">
+                <label>Ciudad:</label>
+                <input id="ciudad" class="form-control" />
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" onclick="limpiar()">Limpiar</button>
+    </form>
+
+    <hr/>
+
+    <!-- TABLA -->
+    <table class="table table-bordered mt-3" id="tabla">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Estado</th>
+                <th>Ciudad</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tablaBody"></tbody>
+    </table>
+
+    <script>
+
+        let usuarios = [];
+
+        // Cargar todos al iniciar
+        cargar();
+
+        function cargar() {
+            fetch('/api/usuarios')
+                .then(r => r.json())
+                .then(data => {
+                    usuarios = data;
+                    mostrar(data);
+                });
+        }
+
+        function mostrar(lista) {
+            let html = "";
+            lista.forEach(u => {
+                html += `
+                <tr>
+                    <td>${u.nombre}</td>
+                    <td>${u.correo}</td>
+                    <td>${u.estado ?? ''}</td>
+                    <td>${u.ciudad ?? ''}</td>
+                    <td>${u.rol}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editar(${u.id})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminar(${u.id})">Eliminar</button>
+                    </td>
+                </tr>
+                `;
+            });
+
+            document.getElementById("tablaBody").innerHTML = html;
+        }
+
+        // 🔍 FILTRAR CON API
+ function filtrar() {
+    let nombre = document.getElementById("buscaNombre").value.trim();
+    let correo = document.getElementById("buscaCorreo").value.trim();
+    let rol    = document.getElementById("buscaRol").value.trim();
+
+    let url = `/api/usuarios/buscar?nombre=${encodeURIComponent(nombre)}&correo=${encodeURIComponent(correo)}&rol=${encodeURIComponent(rol)}`;
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => mostrar(data));
+}
+
+
+
+
+        function limpiar() {
+            document.getElementById("id").value = "";
+            document.getElementById("formUsuario").reset();
+        }
+
+        function editar(id) {
+            let u = usuarios.find(x => x.id === id);
+
+            if (!u) return;
+
+            document.getElementById("id").value = u.id;
+            document.getElementById("nombre").value = u.nombre;
+            document.getElementById("correo").value = u.correo;
+            document.getElementById("pass").value = u.pass;
+            document.getElementById("estado").value = u.estado;
+            document.getElementById("ciudad").value = u.ciudad;
+            document.getElementById("rol").value = u.rol;
+        }
+
+        function eliminar(id) {
+            if (!confirm("¿Eliminar usuario?")) return;
+
+            fetch(`/api/usuarios/${id}`, { method: 'DELETE' })
+                .then(() => cargar());
+        }
+
+        document.querySelector("#formUsuario").addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            let id = document.getElementById("id").value;
+
+            let data = {
+                nombre: nombre.value,
+                correo: correo.value,
+                pass: pass.value,
+                estado: estado.value,
+                ciudad: ciudad.value,
+                rol: rol.value
+            };
+
+            let url = "/api/usuarios";
+            let method = "POST";
+
+            if (id) {
+                url += "/" + id;
+                method = "PUT";
+            }
+
+            fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }).then(() => {
+                limpiar();
+                cargar();
+            });
+        });
+
+    </script>
+
+</div>

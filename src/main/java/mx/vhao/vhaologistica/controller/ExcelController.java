@@ -87,61 +87,61 @@ public class ExcelController {
     }
 
     // Procesar mapeado y mostrar resultado
- // Procesar mapeado y mostrar resultado
-@PostMapping("/process")
-public String procesarMappingFinal(@RequestParam Map<String, String> mapping,
-                                   @RequestParam("rutaArchivo") String rutaArchivo,
-                                   HttpSession session,
-                                   Model model) {
+    @PostMapping("/process")
+    public String procesarMappingFinal(@RequestParam Map<String, String> mapping,
+                                       @RequestParam("rutaArchivo") String rutaArchivo,
+                                       HttpSession session,
+                                       Model model) {
 
-    Usuario usuario = (Usuario) session.getAttribute("usuario");
-    if (usuario == null) return "redirect:/?error=true";
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (usuario == null) return "redirect:/?error=true";
 
-    model.addAttribute("usuario", usuario);
+        model.addAttribute("usuario", usuario);
 
-    try {
-        // Limpiar mapping y hacer trim: ESTO SE QUEDA IGUAL.
-        // Asegura que mappingLimpio contenga TODAS las claves de 'columnasSistema'
-        Map<String, String> mappingLimpio = new LinkedHashMap<>();
-        for (String col : columnasSistema) {
-            String keyReal = "mapping[" + col + "]";
-            String valor = mapping.getOrDefault(keyReal, "").trim();
-            mappingLimpio.put(col.trim(), valor);
+        try {
+            // Limpiar mapping y hacer trim
+            Map<String, String> mappingLimpio = new LinkedHashMap<>();
+            for (String col : columnasSistema) {
+                String keyReal = "mapping[" + col + "]";
+                String valor = mapping.getOrDefault(keyReal, "").trim();
+                mappingLimpio.put(col.trim(), valor);
+            }
+
+            System.out.println("[INFO] Mapeo limpio FINAL: " + mappingLimpio);
+
+            // Procesar archivo (ExcelService pone "-" si no hay mapeo)
+            File file = new File(rutaArchivo);
+            List<Map<String, String>> datosProcesados = excelService.processExcel(file, mappingLimpio);
+
+            // --- FILTRAR POR ESTADO si el usuario es coordinador ---
+            if ("coordinador".equalsIgnoreCase(usuario.getRol()) && usuario.getEstado() != null) {
+                String estadoCoord = usuario.getEstado().trim();
+                datosProcesados.removeIf(fila -> {
+                    String estadoFila = fila.getOrDefault("Estado", "").trim();
+                    return !estadoCoord.equalsIgnoreCase(estadoFila);
+                });
+            }
+
+            System.out.println("[INFO] Total filas procesadas tras filtro: " + datosProcesados.size());
+
+            model.addAttribute("resultado", datosProcesados);
+            model.addAttribute("columnasSistema", this.columnasSistema);
+            model.addAttribute("contenido", "result");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("mensaje", "Error procesando datos.");
+            model.addAttribute("contenido", "map-columns");
         }
 
-        System.out.println("[INFO] Mapeo limpio FINAL: " + mappingLimpio);
-
-        // --- INICIO DEL CAMBIO CLAVE ---
-
-        // ⚠️ Eliminamos la variable 'columnasMapeadas' y el filtro.
-        // Ahora, 'columnasSistema' contiene la lista COMPLETA de encabezados que la vista usará.
-        
-        System.out.println("[INFO] Columnas a mostrar: " + this.columnasSistema);
-
-        // Procesar archivo (el ExcelService ya se encarga de poner "-" si no hay mapeo)
-        File file = new File(rutaArchivo);
-        List<Map<String, String>> datosProcesados = excelService.processExcel(file, mappingLimpio);
-
-        // --- FIN DEL CAMBIO CLAVE ---
-        
-        System.out.println("[INFO] Total filas procesadas: " + datosProcesados.size());
-
-        // Mostrar primeras 10 filas en consola para depuración
-        for (int i = 0; i < Math.min(10, datosProcesados.size()); i++) {
-            System.out.println("[DEBUG] Fila " + (i+1) + ": " + datosProcesados.get(i));
-        }
-
-        model.addAttribute("resultado", datosProcesados);
-        // Enviamos la lista COMPLETA de columnas del sistema
-        model.addAttribute("columnasSistema", this.columnasSistema); 
-        model.addAttribute("contenido", "result");
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        model.addAttribute("mensaje", "Error procesando datos.");
-        model.addAttribute("contenido", "map-columns");
+        return "dashboard";
     }
 
-    return "dashboard";
-}
+      // --- Logout ---
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        System.out.println("[INFO] Usuario cerró sesión correctamente.");
+        return "redirect:/"; // redirige a página principal o login
+    }
 }

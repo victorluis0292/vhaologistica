@@ -29,4 +29,11 @@ public class DashboardController {
 
         return "dashboard"; // Thymeleaf usará 'contenido' para cargar el fragmento correspondiente
     }
+     // --- Logout ---
+    @GetMapping("/dashboard/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        System.out.println("[INFO] Usuario cerró sesión correctamente.");
+        return "redirect:/"; // redirige al login o página principal
+    }
 }

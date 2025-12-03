@@ -18,6 +18,14 @@
 <div class="sidebar">
     <a th:href="@{/dashboard(contenido='inicio')}" th:classappend="${contenido == 'inicio'} ? ' active'">Inicio</a>
     <a th:href="@{/dashboard(contenido='upload')}" th:classappend="${contenido == 'upload'} ? ' active'">Subir Excel</a>
+    <a th:if="${usuario.rol == 'admin'}"
+       th:href="@{/dashboard(contenido='alta-coordinadores')}"
+       th:classappend="${contenido == 'alta-coordinadores'} ? ' active'">
+       Alta coordinadores
+    </a>
+
+    <!-- Enlace de logout -->
+    <a th:href="@{/dashboard/logout}">Cerrar sesión</a>
 </div>
 
 <div class="main-content">
@@ -26,6 +34,7 @@
         <div th:case="'upload'" th:insert="~{fragments/upload :: uploadFragment}"></div>
         <div th:case="'map-columns'" th:insert="~{fragments/map-columns :: mapColumnsFragment}"></div>
         <div th:case="'result'" th:insert="~{fragments/result :: resultFragment}"></div>
+        <div th:case="'alta-coordinadores'" th:insert="~{fragments/alta-coordinadores :: contenido}"></div>
         <div th:case="*">
             <p>Selecciona una opción del menú lateral.</p>
         </div>

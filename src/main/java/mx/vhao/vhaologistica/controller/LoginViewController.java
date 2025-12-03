@@ -17,25 +17,35 @@ public class LoginViewController {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // Muestra login.html
+    // =========================================================
+    // 1️⃣ Mostrar login.html
+    // =========================================================
     @GetMapping("/")
     public String loginPage() {
         return "login";
     }
 
-    // Procesa login desde el formulario clásico
+    // =========================================================
+    // 2️⃣ Procesar LOGIN tradicional del form
+    // =========================================================
     @PostMapping("/login")
     public String loginForm(@RequestParam String correo,
                             @RequestParam String pass,
                             HttpSession session) {
 
-        Usuario usuario = usuarioRepository.findByCorreo(correo).orElse(null);
+        Usuario usuario = usuarioRepository
+                .findByCorreo(correo)
+                .orElse(null);
 
+        // Validaciones
         if (usuario == null || !usuario.getPass().equals(pass)) {
             return "redirect:/?error=true";
         }
 
+        // Guardar usuario en sesión
         session.setAttribute("usuario", usuario);
+
+        // Redirigir al dashboard
         return "redirect:/dashboard";
     }
 }
