@@ -62,15 +62,12 @@ public class ExcelController {
         }
 
         try {
-            // Guardar archivo temporal
             Path tempPath = Files.createTempFile("excel_", ".xlsx");
             Files.copy(file.getInputStream(), tempPath, StandardCopyOption.REPLACE_EXISTING);
-            String rutaArchivo = tempPath.toString();
-            System.out.println("[INFO] Archivo guardado temporalmente en: " + rutaArchivo);
 
-            // Obtener columnas del Excel
+            String rutaArchivo = tempPath.toString();
+
             List<String> columnasExcel = excelService.getColumnNames(new File(rutaArchivo));
-            System.out.println("[INFO] Columnas detectadas en Excel: " + columnasExcel);
 
             model.addAttribute("columnas", columnasExcel);
             model.addAttribute("columnasSistema", columnasSistema);
@@ -86,7 +83,7 @@ public class ExcelController {
         return "dashboard";
     }
 
-    // Procesar mapeado y mostrar resultado
+    // Procesar mapeo y mostrar resultados
     @PostMapping("/process")
     public String procesarMappingFinal(@RequestParam Map<String, String> mapping,
                                        @RequestParam("rutaArchivo") String rutaArchivo,
@@ -99,7 +96,7 @@ public class ExcelController {
         model.addAttribute("usuario", usuario);
 
         try {
-            // Limpiar mapping y hacer trim
+            // Limpiar mapping
             Map<String, String> mappingLimpio = new LinkedHashMap<>();
             for (String col : columnasSistema) {
                 String keyReal = "mapping[" + col + "]";
@@ -107,25 +104,53 @@ public class ExcelController {
                 mappingLimpio.put(col.trim(), valor);
             }
 
-            System.out.println("[INFO] Mapeo limpio FINAL: " + mappingLimpio);
-
-            // Procesar archivo (ExcelService pone "-" si no hay mapeo)
+            // Procesar archivo Excel
             File file = new File(rutaArchivo);
             List<Map<String, String>> datosProcesados = excelService.processExcel(file, mappingLimpio);
 
-            // --- FILTRAR POR ESTADO si el usuario es coordinador ---
-            if ("coordinador".equalsIgnoreCase(usuario.getRol()) && usuario.getEstado() != null) {
-                String estadoCoord = usuario.getEstado().trim();
-                datosProcesados.removeIf(fila -> {
-                    String estadoFila = fila.getOrDefault("Estado", "").trim();
-                    return !estadoCoord.equalsIgnoreCase(estadoFila);
-                });
-            }
+            // ============================================================
+            // ⭐ FILTRO POR ESTADO (Coordinador y Técnico)
+            // ============================================================
+         // ⭐ FILTRO POR ESTADO (Coordinador y Técnico)
+// ⭐ FILTRO POR ESTADO (Coordinador y Técnico)
+if (usuario.getEstado() != null && !usuario.getEstado().isEmpty()) {
 
-            System.out.println("[INFO] Total filas procesadas tras filtro: " + datosProcesados.size());
+    String estadoUsuario = usuario.getEstado().trim();
+    String rol = usuario.getRol().toLowerCase();
+
+    System.out.println("===== FILTRO POR ESTADO =====");
+    System.out.println("ROL USUARIO: " + rol);
+    System.out.println("ESTADO USUARIO: [" + estadoUsuario + "]");
+
+    if (rol.equals("coordinador") || rol.equals("tecnico")) {
+
+        datosProcesados.removeIf(fila -> {
+
+            // Buscar la columna EXACTA "Estado"
+            String estadoFila = fila.entrySet().stream()
+                    .filter(e -> e.getKey().trim().equalsIgnoreCase("Estado"))
+                    .map(e -> e.getValue().trim())
+                    .findFirst()
+                    .orElse("");
+
+            // LOG por fila
+            System.out.println("-----------------------------------");
+            System.out.println("Fila estado encontrado: [" + estadoFila + "]");
+            System.out.println("¿Coincide? " + estadoUsuario.equalsIgnoreCase(estadoFila));
+
+            boolean eliminar = !estadoUsuario.equalsIgnoreCase(estadoFila);
+
+            System.out.println("¿Eliminar fila? " + eliminar);
+
+            return eliminar;
+        });
+    }
+}
+
+
 
             model.addAttribute("resultado", datosProcesados);
-            model.addAttribute("columnasSistema", this.columnasSistema);
+            model.addAttribute("columnasSistema", columnasSistema);
             model.addAttribute("contenido", "result");
 
         } catch (Exception e) {
@@ -137,11 +162,10 @@ public class ExcelController {
         return "dashboard";
     }
 
-      // --- Logout ---
+    // Logout
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
-        System.out.println("[INFO] Usuario cerró sesión correctamente.");
-        return "redirect:/"; // redirige a página principal o login
+        return "redirect:/";
     }
 }

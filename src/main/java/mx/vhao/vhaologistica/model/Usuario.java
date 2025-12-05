@@ -23,6 +23,8 @@ public class Usuario {
     private String estado;
 
     private String ciudad;
+    private String coordinador;
+
 
     // Getters y setters
     public Long getId() { return id; }
@@ -45,4 +47,7 @@ public class Usuario {
 
     public String getCiudad() { return ciudad; }
     public void setCiudad(String ciudad) { this.ciudad = ciudad; }
+
+     public String getCoordinador() { return coordinador; }
+    public void setCoordinador(String coordinador) { this.coordinador = coordinador; }
 }

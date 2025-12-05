@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpSession;
 import mx.vhao.vhaologistica.model.Usuario;
 import mx.vhao.vhaologistica.repository.UsuarioRepository;
 import mx.vhao.vhaologistica.service.UsuarioService;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -18,7 +20,8 @@ public class UsuarioController {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioRepository usuarioRepository, UsuarioService usuarioService) {
+    public UsuarioController(UsuarioRepository usuarioRepository,
+                             UsuarioService usuarioService) {
         this.usuarioRepository = usuarioRepository;
         this.usuarioService = usuarioService;
     }
@@ -55,7 +58,7 @@ public class UsuarioController {
     }
 
     // ============================================================
-    // 3️⃣ REGISTRAR USUARIO (OPCIONAL)
+    // 3️⃣ REGISTRAR USUARIO GENERAL
     // ============================================================
     @PostMapping("/registrar")
     public Map<String, Object> registrar(@RequestBody Usuario nuevoUsuario) {
@@ -83,28 +86,26 @@ public class UsuarioController {
     }
 
     // ============================================================
-    // 5️⃣ BUSCAR USUARIOS (nombre, correo, rol)
+    // 5️⃣ BUSCAR USUARIOS (predictivo)
     // ============================================================
     @GetMapping("/buscar")
     public List<Usuario> buscar(
-            @RequestParam(required = false) String nombre,
-            @RequestParam(required = false) String correo,
-            @RequestParam(required = false) String rol,
+            @RequestParam(required = false) String q,
             HttpSession session) {
 
-        if (nombre != null && nombre.isBlank()) nombre = null;
-        if (correo != null && correo.isBlank()) correo = null;
-        if (rol != null && rol.isBlank()) rol = null;
+        if (q != null && q.isBlank()) {
+            q = null;
+        }
 
         Usuario usuarioSesion = (Usuario) session.getAttribute("usuario");
 
         String estadoFiltro = null;
-        // Si el usuario en sesión es coordinador, filtramos por su estado
-        if (usuarioSesion != null && "coordinador".equalsIgnoreCase(usuarioSesion.getRol())) {
+        if (usuarioSesion != null &&
+                "coordinador".equalsIgnoreCase(usuarioSesion.getRol())) {
             estadoFiltro = usuarioSesion.getEstado();
         }
 
-        return usuarioService.buscarPorEstado(nombre, correo, rol, estadoFiltro);
+        return usuarioService.buscarGeneral(q, estadoFiltro);
     }
 
     // ============================================================
@@ -125,10 +126,106 @@ public class UsuarioController {
     }
 
     // ============================================================
-    // 8️⃣ ELIMINAR USUARIO
+    // 8️⃣ ELIMINAR USUARIO GENERAL
     // ============================================================
     @DeleteMapping("/{id}")
     public void eliminar(@PathVariable Long id) {
         usuarioService.eliminar(id);
+    }
+
+    // ============================================================
+    // 👨‍🔧 9️⃣ ENDPOINTS PARA TÉCNICOS
+    // ============================================================
+
+    // 🔹 Listar todos los técnicos
+    @GetMapping("/tecnicos")
+    public List<Usuario> listarTecnicos() {
+        return usuarioRepository.findTecnicos();
+    }
+
+    // 🔹 Buscar técnicos (predictivo)
+    @GetMapping("/tecnicos/buscar")
+    public List<Usuario> buscarTecnicos(@RequestParam(required = false) String q) {
+        if (q != null && q.isBlank()) q = null;
+        return usuarioRepository.buscarTecnicos(q);
+    }
+
+    // 🔹 Registrar técnico (forzado rol TECNICO)
+   // 🔹 Registrar técnico (forzado rol TECNICO)
+@PostMapping("/tecnicos")
+public ResponseEntity<?> registrarTecnico(@RequestBody Usuario u) {
+
+    // Validar rol técnico
+    u.setRol("TECNICO");
+
+    // VALIDAR que tenga estado obligatorio
+    if (u.getEstado() == null || u.getEstado().trim().isEmpty()) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("success", false);
+        error.put("message", "El campo ESTADO es obligatorio para registrar un técnico.");
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    // Guardar técnico
+    Usuario guardado = usuarioService.guardarTecnico(u);
+
+    Map<String, Object> resp = new HashMap<>();
+    resp.put("success", true);
+    resp.put("message", "Técnico registrado correctamente.");
+    resp.put("usuario", guardado);
+
+    return ResponseEntity.ok(resp);
+}
+
+
+    // 🔹 Actualizar técnico
+    @PutMapping("/tecnicos/{id}")
+    public Usuario actualizarTecnico(@PathVariable Long id, @RequestBody Usuario u) {
+        u.setId(id);
+        u.setRol("TECNICO");
+        return usuarioService.guardar(u);
+    }
+
+    // 🔹 Eliminar técnico
+    @DeleteMapping("/tecnicos/{id}")
+    public void eliminarTecnico(@PathVariable Long id) {
+        usuarioService.eliminar(id);
+    }
+
+    // 🔹 Obtener técnico por ID
+    @GetMapping("/tecnicos/{id}")
+    public Usuario obtenerTecnico(@PathVariable Long id) {
+        Usuario u = usuarioService.buscarPorId(id);
+        if (u != null && "TECNICO".equalsIgnoreCase(u.getRol())) {
+            return u;
+        }
+        return null;
+    }
+
+    
+
+    // ============================================================
+    // 🔧 Asignar coordinador a un técnico
+    // ============================================================
+    @PutMapping("/{id}/coordinador")
+    public Usuario asignarCoordinador(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+
+        String coordinador = body.get("coordinador");
+
+        Usuario u = usuarioService.buscarPorId(id);
+        if (u == null) return null;
+
+        u.setCoordinador(coordinador);
+        return usuarioService.guardar(u);
+    }
+
+    // ============================================================
+    // 🔹 Listar solo coordinadores
+    // ============================================================
+    @GetMapping("/coordinadores")
+    public List<Usuario> soloCoordinadores() {
+        return usuarioRepository.listarCoordinadores();
     }
 }

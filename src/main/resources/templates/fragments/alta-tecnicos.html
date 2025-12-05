@@ -1,0 +1,314 @@
+<div th:fragment="contenido">
+
+    <h3 class="mb-3">Administración de Técnicos</h3>
+
+    <!-- BOTÓN PARA ABRIR MODAL -->
+    <button class="btn btn-success mb-3" onclick="nuevoTecnico()">
+        ➕ Agregar Técnico
+    </button>
+
+    <!-- 🔍 BUSCADOR PREDICTIVO -->
+    <div class="card p-3 mb-4 shadow-sm position-relative">
+        <h5 class="mb-3">Buscar Técnicos</h5>
+        <input type="text"
+               id="buscadorTecnico"
+               class="form-control"
+               placeholder="Buscar por nombre, correo, ciudad o estado..."
+               onkeyup="predictivoTecnico()"
+               autocomplete="off">
+        <ul id="sugerenciasTecnico"
+            class="list-group w-100 mt-1"
+            style="display:none; max-height: 200px; overflow-y:auto;">
+        </ul>
+    </div>
+
+    <!-- TABLA -->
+    <table class="table table-bordered mt-3" id="tablaTecnico">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Estado</th>
+                <th>Ciudad</th>
+                <th>Coordinador</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tablaBodyTecnico"></tbody>
+    </table>
+
+    <!-- MODAL -->
+    <div class="modal fade" id="modalTecnico" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Formulario de Técnico</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="formTecnico">
+                        <input type="hidden" id="idTecnico">
+
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label>Nombre:</label>
+                                <input id="nombreTecnico" class="form-control" required />
+                            </div>
+                            <div class="col">
+                                <label>Correo:</label>
+                                <input id="correoTecnico" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <!-- 🔒 CONTRASEÑA CON OJITO -->
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label>Contraseña:</label>
+                                <div class="input-group">
+                                    <input id="passTecnico" type="password" class="form-control" required />
+                                    <button class="btn btn-outline-secondary border-0 bg-transparent"
+                                            type="button"
+                                            id="togglePassTecnico">
+                                        <i class="bi bi-eye-slash" id="iconPassTecnico"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <label>Coordinador:</label>
+                                <input id="coordinadorTecnico" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col">
+                              <label>Estado:</label>
+                              <select id="estadoTecnico" class="form-select" required>
+                                  <option value="">Seleccione un estado</option>
+                              </select>
+                             </div>
+
+                            <div class="col">
+                                <label>Ciudad:</label>
+                                <input id="ciudadTecnico" class="form-control" />
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success" onclick="guardarTecnico()">Guardar</button>
+                    <button class="btn btn-secondary" onclick="limpiarTecnico()">Limpiar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        let tecnicos = [];
+        let modal;
+
+        // ============================
+        // ⭐ CARGAR ESTADOS DE MÉXICO
+        // ============================
+        function cargarEstadosMexico(seleccionado = "") {
+            const select = document.getElementById("estadoTecnico");
+            select.innerHTML = `<option value="">Seleccione un estado</option>`;
+
+            fetch("/api/catalogos/estados-mexico")
+                .then(res => res.json())
+                .then(estados => {
+                    estados.forEach(est => {
+                        const opt = document.createElement("option");
+                        opt.value = est;
+                        opt.textContent = est;
+
+                        // Marcar como seleccionado si coincide
+                        if (seleccionado && est.toLowerCase() === seleccionado.toLowerCase()) {
+                            opt.selected = true;
+                        }
+
+                        select.appendChild(opt);
+                    });
+                });
+        }
+
+        // ============================
+        // ⭐ INICIALIZACIÓN
+        // ============================
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const modalEl = document.getElementById('modalTecnico');
+            if (modalEl) {
+                modal = new bootstrap.Modal(modalEl);
+                cargarTecnicos();
+            }
+
+            // 👁 OJITO PARA MOSTRAR CONTRASEÑA
+            const toggle = document.getElementById("togglePassTecnico");
+            const passInput = document.getElementById("passTecnico");
+            const icon = document.getElementById("iconPassTecnico");
+
+            toggle.addEventListener("click", () => {
+                if (passInput.type === "password") {
+                    passInput.type = "text";
+                    icon.classList.replace("bi-eye-slash", "bi-eye");
+                } else {
+                    passInput.type = "password";
+                    icon.classList.replace("bi-eye", "bi-eye-slash");
+                }
+            });
+        });
+
+        function cargarTecnicos() {
+            fetch('/api/usuarios/tecnicos')
+                .then(r => r.json())
+                .then(data => {
+                    tecnicos = data;
+                    mostrarTecnicos(data);
+                });
+        }
+
+        function mostrarTecnicos(lista) {
+            let html = "";
+            lista.forEach(u => {
+                html += `
+                <tr>
+                    <td>${u.nombre}</td>
+                    <td>${u.correo}</td>
+                    <td>${u.estado ?? ''}</td>
+                    <td>${u.ciudad ?? ''}</td>
+                    <td>${u.coordinador ?? ''}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editarTecnico(${u.id})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarTecnico(${u.id})">Eliminar</button>
+                    </td>
+                </tr>`;
+            });
+            tablaBodyTecnico.innerHTML = html;
+        }
+
+        function nuevoTecnico() {
+            limpiarTecnico();
+            cargarEstadosMexico(); // obliga a seleccionar un estado
+            modal.show();
+        }
+
+        function editarTecnico(id) {
+            const u = tecnicos.find(t => t.id === id);
+            if (!u) return;
+
+            cargarEstadosMexico(u.estado); // selecciona automáticamente el estado
+
+            setTimeout(() => {
+                idTecnico.value = u.id;
+                nombreTecnico.value = u.nombre;
+                correoTecnico.value = u.correo;
+                ciudadTecnico.value = u.ciudad;
+                coordinadorTecnico.value = u.coordinador;
+                passTecnico.value = u.pass || "";
+            }, 200);
+
+            modal.show();
+        }
+
+        function eliminarTecnico(id) {
+            if (!confirm("¿Eliminar técnico?")) return;
+
+            fetch(`/api/usuarios/tecnicos/${id}`, { method: 'DELETE' })
+                .then(() => cargarTecnicos());
+        }
+
+        function limpiarTecnico() {
+            formTecnico.reset();
+            idTecnico.value = "";
+        }
+
+        function guardarTecnico() {
+            if (!estadoTecnico.value) {
+                alert("Debes seleccionar un estado");
+                return;
+            }
+
+            const id = idTecnico.value;
+
+            const data = {
+                nombre: nombreTecnico.value,
+                correo: correoTecnico.value,
+                pass: passTecnico.value,
+                estado: estadoTecnico.value,
+                ciudad: ciudadTecnico.value,
+                coordinador: coordinadorTecnico.value
+            };
+
+            let url = "/api/usuarios/tecnicos";
+            let method = "POST";
+
+            if (id) {
+                url += "/" + id;
+                method = "PUT";
+            }
+
+            fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }).then(() => {
+                cargarTecnicos();
+                modal.hide();
+            });
+        }
+
+        // 🔍 PREDICTIVO
+        function predictivoTecnico() {
+            let q = buscadorTecnico.value.trim();
+            let caja = sugerenciasTecnico;
+
+            if (q.length === 0) {
+                caja.style.display = "none";
+                cargarTecnicos();
+                return;
+            }
+
+            fetch(`/api/usuarios/tecnicos/buscar?q=${encodeURIComponent(q)}`)
+                .then(r => r.json())
+                .then(data => {
+                    mostrarTecnicos(data);
+                    caja.innerHTML = "";
+
+                    if (data.length === 0) {
+                        caja.style.display = "none";
+                        return;
+                    }
+
+                    caja.style.display = "block";
+
+                    data.forEach(u => {
+                        let li = document.createElement("li");
+                        li.className = "list-group-item list-group-item-action";
+                        li.innerHTML = `<strong>${u.nombre}</strong><br><small>${u.correo}</small>`;
+                        li.onclick = () => {
+                            buscadorTecnico.value = u.nombre;
+                            caja.style.display = "none";
+                            filtrarTecnico();
+                        };
+                        caja.appendChild(li);
+                    });
+                });
+        }
+
+        function filtrarTecnico() {
+            let q = buscadorTecnico.value.trim();
+            fetch(`/api/usuarios/tecnicos/buscar?q=${encodeURIComponent(q)}`)
+                .then(r => r.json())
+                .then(data => mostrarTecnicos(data));
+        }
+
+    </script>
+
+</div>
