@@ -28,7 +28,7 @@
        Subir Excel
     </a>
 
-    <!-- Opciones sólo para admin -->
+    <!--- Opciones sólo para admin -->
     <a th:if="${usuario.rol == 'admin'}"
        th:href="@{/dashboard(contenido='alta-coordinadores')}"
        th:classappend="${contenido == 'alta-coordinadores'} ? ' active'">
